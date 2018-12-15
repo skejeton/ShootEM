@@ -1,0 +1,20 @@
+{ "columns":240,
+ "grid":
+    {
+     "height":16,
+     "orientation":"orthogonal",
+     "width":16
+    },
+ "image":"images\/MTileset.png",
+ "imageheight":1080,
+ "imagewidth":1920,
+ "margin":0,
+ "name":"MShooter",
+ "spacing":0,
+ "tilecount":32400,
+ "tiledversion":"1.2.1",
+ "tileheight":8,
+ "tilewidth":8,
+ "type":"tileset",
+ "version":1.2
+}
