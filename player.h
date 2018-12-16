@@ -3,67 +3,59 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QRect>
+#include <QMap>
 #include <iostream>
+#include <functional>
 #include <QVector>
 #include "allweapons.h"
 #include "gamedata.h"
 #include "map.h"
+#include "entity.h"
 #include "animation.h"
 #include "animationmanager.h"
 #include "cooldown.h"
 #include "mapobject.h"
 #include "camera.h"
 
-#define PLAYER_REDTEAM Game::Entities::Player::Red
-#define PLAYER_BLUETEAM Game::Entities::Player::Blue
-
-class Player
+class Player : public Entity
 {
 private:
 
-	bool visible;
-	int health;
     CoolDown hitCooldown;
     CoolDown invicibleCooldown;
-    int maxHealth = 100;
-	enum CDIR {X, Y};
-	Weapon *currentWeapon;
-	AnimationManager<QRect> animations;
+
+    Weapon *currentWeapon;
+    QMap<BlockTypes, std::function<void(MapObject&, CDIR)>> collisionCases;
 	Animation<bool> invAnim;
+	AnimationManager<QRect> animMan;
 	CoolDown attackAnimCooldown;
-	QRect playerRect;
-	QPixmap sprite;
     bool invicible;
-	bool dirx;
+	int dirx;
 	bool isAttacking;
-	bool onLadder;
-	float x, y;
-	float oldx, oldy;
-	float vx, vy;
-	float climbVel;
+    bool onLadder;
+	bool climbing;
 public:
-	Player();
-    void takeDamage(int amount);
-	void setCurrentWeapon(Weapon &w);
-	void useCurrentWeapon();
-	void getHit(Weapon &w);
-	int getHealth();
-	void setImageRect(QRect rect);
-	void setRect(QRect rect);
-	void draw(QPainter& painter, Camera offset = Camera());
-	void move(float x);
-	QPointF getPosition();
-	void setClimbVel(float cvel);
+	int climbVelY;
+	int oldX;
+	int oldY;
+
+
+    Player();
+	void setAnimManager(AnimationManager<QRect> &m);
+    void useCurrentWeapon();
+	void setClimbVel(int y);
+    void setRect(QRect rect) override;
+    void draw(QPainter& painter, Camera offset = Camera()) override;
+    QRectF getMergedRect();
+
 	void _jump();
-	bool collision(MapObject& obj);
+    void collision(Map& gameMap, CDIR cDir) override;
 	bool activated(MapObject& obj);
 
-    void onSpikeCollision(MapObject& obj, CDIR dir);
-	void onLadderCollision(MapObject& obj, CDIR dir);
-	void onSolidCollision(MapObject& obj, CDIR dir);
-	void update(float deltaTime, Map& map);
-	//void update(float deltaTime, MapObject& obj);
-	//void update(float deltaTime, QVector<MapObject>& objs);
+    void update(float deltaTime, Map& map) override;
+
+
+    AnimationManager<QRect> animations;
 	enum {stay, jump, climb, hit, walk} STATE;
 
 };

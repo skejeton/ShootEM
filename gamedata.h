@@ -25,6 +25,8 @@ namespace Game {
 	extern float scaleFactor;
 	extern float framerate;
 
+	const QRect HudCapTop(232, 16, 8, 8);
+	const QRect HudCapBot(224, 16, 8, 8);
 	const QRect Hud0(240, 8, 8, 8);
 	const QRect Hud1(224, 8, 8, 8);
 	const QRect Hud2(232, 8, 8, 8);
@@ -89,11 +91,14 @@ namespace Game {
 				const QRect playerHit(16, 64, 16, 16);
 			}
 			namespace Red {
-				const QRect playerStand1(0, 96, 16, 16);
-				const QRect playerStand2(16, 96, 16, 16);
-				const QRect playerAttack(0, 48, 16, 16);
-				const QRect playerJump(16, 48, 16, 16);
-				const QRect playerClimb(0, 64, 16, 16);
+				const QRect playerStand1(0, 32+64, 16, 16);
+				const QRect playerStand2(0, 32+16+64, 16, 16);
+				const QRect playerWalk(16, 32+64, 16, 16);
+				const QRect playerAttack(16, 80+64, 16, 16);
+				const QRect playerJump(16, 48+64, 16, 16);
+				const QRect playerClimb(0, 64+64, 16, 16);
+				const QRect playerClimb2(0, 64+16+64, 16, 16);
+				const QRect playerHit(16, 64+64, 16, 16);
 			}
 		}
 	}

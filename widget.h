@@ -10,6 +10,7 @@
 #include <QMouseEvent>
 #include <QFile>
 #include <QJsonObject>
+#include <QPaintEvent>
 #include "gamedata.h"
 #include "player.h"
 #include "map.h"
@@ -41,6 +42,11 @@ private:
 	Background testBg;
 	Background bricksBg;
     Map testmap;
+
+
+	//Animation Managers
+	AnimationManager<QRect> teamRed;
+	AnimationManager<QRect> teamBlue;
 private slots:
 	void update();
 protected:

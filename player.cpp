@@ -1,441 +1,247 @@
 #include "player.h"
 
+
 Player::Player()
 {
-	this->x = 0;
-	this->y = 0;
-	this->vx = 0;
-	this->vy = 0;
-	dirx = 1;
-	this->invicible = false;
-	invAnim.frames.push_back(true);
-	invAnim.frames.push_back(false);
-    this->health = 100;
-	this->currentWeapon = nullptr;
     sprite.load(":/files/assets/images/MTileset.png");
 
-	Animation<QRect> stayAnim;
-	stayAnim.frames.push_back(Game::Entities::Player::Blue::playerStand1);
-	stayAnim.frames.push_back(Game::Entities::Player::Blue::playerStand2);
-	stayAnim.frameTimeout = std::chrono::milliseconds(500);
-	animations.animations["stay"] = stayAnim;
+    //Defines player direction (flips the image)
+	dirx = 1;
 
-	Animation<QRect> attackAnim;
-	attackAnim.frames.push_back(Game::Entities::Player::Blue::playerAttack);
-	attackAnim.frameTimeout = std::chrono::milliseconds(500);
-	animations.animations["attack"] = attackAnim;
+    //Defines either player can be attacked or not
+    invicible = false;
 
-	Animation<QRect> hitAnim;
-	hitAnim.frames.push_back(Game::Entities::Player::Blue::playerHit);
-	hitAnim.frameTimeout = std::chrono::milliseconds(500);
-	animations.animations["hit"] = hitAnim;
+    //Defines either player attacking or not, used for animation
+    isAttacking = false;
 
-	Animation<QRect> climbAnim;
-	climbAnim.frames.push_back(Game::Entities::Player::Blue::playerClimb);
-	climbAnim.frames.push_back(Game::Entities::Player::Blue::playerClimb2);
-	climbAnim.frameTimeout = std::chrono::milliseconds(200);
-	animations.animations["climb"] = climbAnim;
+    //Defines either player on ladder or not
+    onLadder = false;
 
-	Animation<QRect> jumpAnim;
-	jumpAnim.frames.push_back(Game::Entities::Player::Blue::playerJump);
-	jumpAnim.frameTimeout = std::chrono::milliseconds(500);
-	animations.animations["jump"] = jumpAnim;
+    vx = vy = 0;
 
-	Animation<QRect> walkAnim;
-	walkAnim.frames.push_back(Game::Entities::Player::Blue::playerStand1);
-	walkAnim.frames.push_back(Game::Entities::Player::Blue::playerWalk);
-	walkAnim.frameTimeout = std::chrono::milliseconds(200);
-	animations.animations["walk"] = walkAnim;
-}
+    health = 100;
+    maxHealth = 100;
 
-void Player::takeDamage(int amount)
-{
-    if (!invicible)
+
+    collisionCases[solid] = [&](MapObject &cObj, CDIR cDir)
+    {
+        if (vx > 0 && cDir == CDIR::X)
+        {
+            this->x = cObj.getPosition().x() - this->collisionRect.width();
+            vx = 0;
+        }
+        else if (vx < 0 && cDir == CDIR::X)
+        {
+            this->x = cObj.getPosition().x() + cObj.getRect().width();
+            vx = 0;
+        }
+        if (vy > 0 && cDir == CDIR::Y)
+        {
+            this->y = cObj.getPosition().y() - this->collisionRect.height();
+            vy = 0;
+			STATE = stay;
+        }
+        else if (vy < 0 && cDir == CDIR::Y)
+        {
+            this->y = cObj.getPosition().y() + cObj.getRect().height();
+            vy = 0;
+        }
+    };
+    collisionCases[null] = [&](MapObject &cObj, CDIR cDir)
     {
 
-		hitCooldown.start(std::chrono::milliseconds(1000));
-		invAnim.frameTimeout = std::chrono::milliseconds(100);
-		invAnim.start();
-		invicibleCooldown.start(std::chrono::milliseconds(5000));
-		health -= amount;
-    }
+    };
+    collisionCases[ladder] = [&](MapObject &cObj, CDIR cDir)
+	{
+		onLadder = true;
+		if (climbing)
+		{
+			STATE = climb;
+			x = cObj.getPosition().x() + (cObj.getRect().width()-collisionRect.width())/2;
+		}
+    };
+    collisionCases[laddertop] = [&](MapObject &cObj, CDIR cDir)
+    {
+		onLadder = true;
+		if (cDir == CDIR::Y && activated(cObj) && climbVelY <= 0)
+		{
+			this->y = cObj.getPosition().y() - this->collisionRect.height();
+			vy = 0;
+			STATE = stay;
+		}
+		if (climbing)
+		{
+			STATE = climb;
+			x = cObj.getPosition().x() + (cObj.getRect().width()-collisionRect.width())/2;
+		}
+    };
+    collisionCases[spike] = [&](MapObject &cObj, CDIR cDir)
+    {
+		health--;
+		if (vx > 0 && cDir == CDIR::X)
+		{
+			this->x = cObj.getPosition().x() - this->collisionRect.width();
+			vx = 0;
+		}
+		else if (vx < 0 && cDir == CDIR::X)
+		{
+			this->x = cObj.getPosition().x() + cObj.getRect().width();
+			vx = 0;
+		}
+		if (vy > 0 && cDir == CDIR::Y)
+		{
+			this->y = cObj.getPosition().y() - this->collisionRect.height();
+			vy = 0;
+			STATE = stay;
+		}
+		else if (vy < 0 && cDir == CDIR::Y)
+		{
+			this->y = cObj.getPosition().y() + cObj.getRect().height();
+			vy = 0;
+		}
+    };
+
 }
 
-void Player::setCurrentWeapon(Weapon &w)
+void Player::setAnimManager(AnimationManager<QRect> &m)
 {
-	this->currentWeapon = &w;
+	this->animMan = m;
 }
 
 void Player::useCurrentWeapon()
 {
-	this->currentWeapon->use();
-	this->attackAnimCooldown.start(std::chrono::milliseconds(500));
+	currentWeapon->use();
 }
 
-int Player::getHealth()
+void Player::setClimbVel(int y)
 {
-	return health;
+	if (y != 0)
+		climbing = true;
+	climbVelY = y;
 }
-
 
 void Player::setRect(QRect rect)
 {
-    this->playerRect = rect;
+    this->collisionRect = rect;
 }
-
-
 
 void Player::draw(QPainter &painter, Camera offset)
 {
-	QPixmap toDraw;
-	if (isAttacking)
-	{
-		animations.setCurrentAnimation("attack");
-		animations.update();
-	}
-	else if (STATE == stay)
-	{
-		animations.setCurrentAnimation("stay");
-		animations.update();
-	}
-	else if (STATE == hit)
-	{
-		animations.setCurrentAnimation("hit");
-	}
-	else if (STATE == climb)
-	{
-		animations.setCurrentAnimation("climb");
-		if (climbVel != 0) animations.update();
-	}
-	else if (STATE == jump)
-	{
-		animations.setCurrentAnimation("jump");
-		animations.update();
-	}
-	else if (STATE == walk)
-	{
-		animations.setCurrentAnimation("walk");
-		animations.update();
-	}
+    QPixmap toDraw;
 
+	toDraw = sprite.copy(animMan.getCurrentFrame());
 
-	toDraw = sprite.copy(animations.getCurrentFrame());
-
-
-	if (dirx == 1)
-	{
-		toDraw = toDraw.transformed(QTransform().scale(Game::scaleFactor, Game::scaleFactor));
-	}
-	else
-	{
-		toDraw = toDraw.transformed(QTransform().scale(-Game::scaleFactor, Game::scaleFactor));
-	}
-	if (this->currentWeapon != nullptr && this->currentWeapon->isUsing())
-	{
-		this->currentWeapon->draw(painter, offset);
-	}
-
-
-	if (visible)
-	{
-		painter.drawPixmap((x-playerRect.x()+offset.getPosition().x())*Game::scaleFactor, (y-playerRect.y()+offset.getPosition().y())*Game::scaleFactor, toDraw);
-	}
+	painter.drawPixmap((collisionRect.x()+x+offset.getPosition().x())*Game::scaleFactor, (collisionRect.y()+y+offset.getPosition().y())*Game::scaleFactor,
+					   toDraw.transformed(QTransform().scale(Game::scaleFactor*dirx, Game::scaleFactor)));
 }
 
-void Player::move(float x)
+QRectF Player::getMergedRect()
 {
-	vx = x;
-    dirx = vx >= 0;
+    return QRectF(x, y,
+                 collisionRect.width(), collisionRect.height());
 }
-
-QPointF Player::getPosition()
-{
-    return QPointF(x, y);
-}
-
-void Player::setClimbVel(float cvel)
-{
-	this->climbVel = cvel;
-	this->onLadder = true;
-}
-
 
 void Player::_jump()
 {
-
-	if (STATE == climb)
-		onLadder = false;
+	climbing = false;
 	if (STATE == stay || STATE == walk)
 	{
-        vy -= 160;
+		vy = -160;
 	}
-
 }
 
-bool Player::collision(MapObject &obj)
+void Player::collision(Map &gameMap, CDIR cDir)
 {
-	QRect r = obj.getRect();
-	QPointF p = obj.getPosition();
-	this->STATE = jump;
-	if (
-			p.x() + r.width() > this->x &&
-			p.y() + r.height() > this->y &&
-			this->x + this->playerRect.width() > p.x() &&
-			this->y + this->playerRect.height() > p.y()
-		)
-	{
+    for (int i = 0; i < gameMap.getWidth(); i++)
+    {
+        for (int j = 0; j < gameMap.getHeight(); j++)
+        {
+			STATE = jump;
+            MapObject thisObject = gameMap.getObject(i, j);
 
-		return 1;
-	}
-	return 0;
+			if (thisObject.getType() == null)
+			{
+				continue;
+			}
 
+            if (thisObject.getMergedRect().intersects(getMergedRect()))
+			{
+				 collisionCases[thisObject.getType()](thisObject, cDir);
+				 return;
+            }
+		}
+    }
 }
 
 bool Player::activated(MapObject &obj)
 {
-	if ((oldy + playerRect.height()) <= obj.getPosition().y())
-		return true;
-    return false;
-}
-
-void Player::onSpikeCollision(MapObject &obj, Player::CDIR dir)
-{
-    QRect r = obj.getRect();
-    QPointF p = obj.getPosition();
-    if (vx > 0 && dir == CDIR::X)
-    {
-        this->x = p.x() - this->playerRect.width();
-        vx = 0;
-    }
-    else if (vx < 0 && dir == CDIR::X)
-    {
-        this->x = p.x() + r.width();
-        vx = 0;
-    }
-    if (vy > 0 && dir == CDIR::Y)
-    {
-        this->y = p.y() - this->playerRect.height();
-        vy = 0;
-    }
-    else if (vy < 0 && dir == CDIR::Y)
-    {
-        this->y = p.y() + r.height();
-        vy = 0;
-    }
-    STATE = stay;
-}
-
-void Player::onLadderCollision(MapObject &obj, CDIR dir)
-{
-	QRect r = obj.getRect();
-	QPointF p = obj.getPosition();
-
-    if (dir == CDIR::Y && activated(obj) && obj.getType() == laddertop && climbVel <= 0)
-	{
-		STATE = stay;
-        onLadder = false;
-		y = p.y()-playerRect.height();
-		vy = 0;
-	}
-
-    if (onLadder)
-    {
-        x = p.x()+playerRect.x();
-        STATE = climb;
-        y = oldy;
-        vy = 0;
-    }
-}
-
-void Player::onSolidCollision(MapObject &obj, CDIR dir)
-{
-	QRect r = obj.getRect();
-	QPointF p = obj.getPosition();
-	if (vx > 0 && dir == CDIR::X)
-	{
-		this->x = p.x() - this->playerRect.width();
-		vx = 0;
-	}
-	else if (vx < 0 && dir == CDIR::X)
-	{
-		this->x = p.x() + r.width();
-		vx = 0;
-	}
-	if (vy > 0 && dir == CDIR::Y)
-	{
-		this->y = p.y() - this->playerRect.height();
-		this->STATE = stay;
-		if (vx != 0) STATE = walk;
-		vy = 0;
-	}
-	else if (vy < 0 && dir == CDIR::Y)
-	{
-		this->y = p.y() + r.height();
-		vy = 0;
-	}
-
+	return (this->oldY+collisionRect.height()) <= obj.getPosition().y();
 }
 
 void Player::update(float deltaTime, Map &map)
 {
-	isAttacking = false;
-
-    if (vy > 200) vy = 200;
-	this->oldx = x;
-	this->oldy = y;
-	x += vx*deltaTime;
-	bool checking = true;
-
-	if (!invicibleCooldown.isTimeout())
-    {
-		invicible = true;
-		invAnim.requestFrame();
-		visible = invAnim.getCurrentFrame();
-    }
-	else
-	{
-		visible = true;
-		invicible = false;
-	}
+	if (vx != 0)
+		dirx = Game::getSign(vx);
+	oldX = x;
+	oldY = y;
+	//Defines either player overlaps ladder or not
+	onLadder = false;
+    x += vx*deltaTime;
 
 
-	//check block collision in X
-	for (int i = 0; i < map.getWidth() && checking; i++)
-	{
-		for (int j = 0; j < map.getHeight() && checking; j++)
-		{
-			MapObject obj(map.getObject(i, j));
+    collision(map, CDIR::X);
 
-			if (obj.getType() == BlockTypes::solid && collision(obj))
-			{
-				onSolidCollision(obj, CDIR::X);
-				checking = false;
-				break;
-			}
-			if (obj.getType() == BlockTypes::ladder && collision(obj))
-			{
-				onLadderCollision(obj, CDIR::X);
-				checking = false;
-				break;
-			}
-		}
-	}
-	checking = true;
+
 
 	if (STATE == jump)
 	{
 		vy += Game::gravity;
 	}
 
+	if (onLadder && climbing)
+	{
+		vy = 0;
+		y += climbVelY*deltaTime;
+
+	}
+	else
+	{
+		climbing = false;
+	}
+
 	y += vy*deltaTime;
+    collision(map, CDIR::Y);
 
-
-	for (int i = 0; i < map.getWidth() && checking; i++)
+	if (vx != 0 && STATE == stay)
 	{
-		for (int j = 0; j < map.getHeight() && checking; j++)
-		{
-			MapObject obj = map.getObject(i, j);
-
-			//check block collision in Y
-			if (obj.getType() == BlockTypes::solid && collision(obj))
-			{
-				onSolidCollision(obj, CDIR::Y);
-				checking = false;
-				break;
-			}
-            if (obj.getType() == BlockTypes::ladder || obj.getType() == BlockTypes::laddertop && collision(obj))
-			{
-				onLadderCollision(obj, CDIR::Y);
-				if (onLadder && STATE == climb)
-				{
-					y += climbVel*deltaTime;
-				}
-				checking = false;
-				break;
-			}
-            if (obj.getType() == BlockTypes::spike && collision(obj))
-            {
-                onSpikeCollision(obj, CDIR::Y);
-				if (hitCooldown.isTimeout())
-                {
-					takeDamage(10);
-                }
-                checking = false;
-                break;
-            }
-		}
+		STATE = walk;
 	}
 
-    if (!hitCooldown.isTimeout())
-    {
-       STATE = hit;
-    }
-
-	if (!attackAnimCooldown.isTimeout())
+	if (STATE == stay)
 	{
-		this->isAttacking = true;
+		animMan.setCurrentAnimation("stay");
+		animMan.update();
 	}
-
-
-	// Check if player current weapon is using and not nullptr
-	if (this->currentWeapon != nullptr && this->currentWeapon->isUsing())
+	else if (STATE == climb && climbVelY != 0)
 	{
-		this->currentWeapon->update(deltaTime);
-		this->currentWeapon->moveToPlayer(QRect(this->x, this->y, this->playerRect.width(), this->playerRect.height()));
+		animMan.setCurrentAnimation("climb");
+		animMan.update();
+	}
+	else if (STATE == jump)
+	{
+		animMan.setCurrentAnimation("jump");
+		animMan.update();
+	}
+	else if (STATE == walk)
+	{
+		animMan.setCurrentAnimation("walk");
+		animMan.update();
 	}
 
 
 
+	climbVelY = 0;
 
-	climbVel -= 3*Game::getSign(climbVel);
-	vx -= 3*Game::getSign(vx);
 
+    vx = 0;
 }
-
-//void Player::update(float deltaTime, MapObject &obj)
-//{
-//	x += vx*deltaTime;
-//	collision(obj, 1);
-
-//	if (STATE == jump)
-//	{
-//		vy += Game::gravity;
-//	}
-
-//	STATE = stay;
-//	y += vy*deltaTime;
-//	collision(obj, 0);
-//	vx = 0;
-//}
-
-//void Player::update(float deltaTime, QVector<MapObject> &objs)
-//{
-//	x += vx*deltaTime;
-//	for (int i = 0; i < objs.size(); i++)
-//	{
-//		if (collision(objs[i], 1))
-//		{
-//			break;
-//		}
-//	}
-
-
-//	if (STATE == jump)
-//	{
-//		vy += Game::gravity;
-//	}
-
-//	STATE = stay;
-//	y += vy*deltaTime;
-
-//	for (int i = 0; i < objs.size(); i++)
-//	{
-//		if (collision(objs[i], 0))
-//		{
-//			break;
-//		}
-//	}
-
-//	vx = 0;
-//}
-

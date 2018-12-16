@@ -25,7 +25,13 @@ void MapObject::draw(QPainter &painter, Camera offset)
 
 QRect MapObject::getRect()
 {
-	return this->rect;
+    return this->rect;
+}
+
+QRectF MapObject::getMergedRect()
+{
+    return QRectF(x, y,
+                 rect.width(), rect.height());
 }
 
 void MapObject::applyProps(MapProps props)

@@ -141,7 +141,6 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
-		../.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -261,7 +260,6 @@ Makefile: ../MShooter.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf \
-		.qmake.stash \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf \
 		/usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf \
@@ -347,7 +345,6 @@ Makefile: ../MShooter.pro /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/qt_config.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++/qmake.conf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_post.prf:
-.qmake.stash:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/exclusive_builds.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/toolchain.prf:
 /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/default_pre.prf:
@@ -442,9 +439,12 @@ moc_widget.cpp: ../gamedata.h \
 		../weaponpart.h \
 		../map.h \
 		../mapobject.h \
+		../entity.h \
 		../animation.h \
 		../cooldown.h \
 		../animation.tpp \
+		../animationmanager.h \
+		../animationmanager.tpp \
 		../liveshud.h \
 		../background.h \
 		../widget.h \
@@ -481,9 +481,12 @@ main.o: ../main.cpp ../widget.h \
 		../weaponpart.h \
 		../map.h \
 		../mapobject.h \
+		../entity.h \
 		../animation.h \
 		../cooldown.h \
 		../animation.tpp \
+		../animationmanager.h \
+		../animationmanager.tpp \
 		../liveshud.h \
 		../background.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o ../main.cpp
@@ -498,9 +501,12 @@ widget.o: ../widget.cpp ../widget.h \
 		../weaponpart.h \
 		../map.h \
 		../mapobject.h \
+		../entity.h \
 		../animation.h \
 		../cooldown.h \
 		../animation.tpp \
+		../animationmanager.h \
+		../animationmanager.tpp \
 		../liveshud.h \
 		../background.h \
 		ui_widget.h
@@ -515,9 +521,12 @@ player.o: ../player.cpp ../player.h \
 		../gamedata.h \
 		../map.h \
 		../mapobject.h \
+		../entity.h \
 		../animation.h \
 		../cooldown.h \
-		../animation.tpp
+		../animation.tpp \
+		../animationmanager.h \
+		../animationmanager.tpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o player.o ../player.cpp
 
 gamedata.o: ../gamedata.cpp ../gamedata.h
@@ -568,7 +577,14 @@ liveshud.o: ../liveshud.cpp ../liveshud.h \
 cooldown.o: ../cooldown.cpp ../cooldown.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o cooldown.o ../cooldown.cpp
 
-entity.o: ../entity.cpp 
+entity.o: ../entity.cpp ../entity.h \
+		../gamedata.h \
+		../map.h \
+		../mapobject.h \
+		../camera.h \
+		../animation.h \
+		../cooldown.h \
+		../animation.tpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o entity.o ../entity.cpp
 
 qrc_resources.o: qrc_resources.cpp 

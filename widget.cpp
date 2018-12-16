@@ -8,9 +8,9 @@ Widget::Widget(QWidget *parent) :
 	ui->setupUi(this);
     testmap.open(":/files/assets/map.txt");
 
-	you.setRect(QRect(3, 0, 10, 15));
+    you.setRect(QRect(-3, 0, 10, 15));
 
-	you.setCurrentWeapon(testWeapon);
+    //you.setCurrentWeapon(testWeapon);
 
     testLivesHud.max = 100;
 
@@ -26,6 +26,45 @@ Widget::Widget(QWidget *parent) :
 	testBg.setPosition(0, 80);
 	testBg.setColorAfter(QColor(0,0,0,255));
 	connect(&frameUpdate, SIGNAL(timeout()), this, SLOT(update()));
+
+	//setup animation managers
+	//blue
+	teamBlue.animations["stay"].frames.push_back(Game::Entities::Player::Blue::playerStand1);
+	teamBlue.animations["stay"].frames.push_back(Game::Entities::Player::Blue::playerStand2);
+	teamBlue.animations["stay"].frameTimeout = std::chrono::milliseconds(500);
+
+	teamBlue.animations["jump"].frames.push_back(Game::Entities::Player::Blue::playerJump);
+	teamBlue.animations["jump"].frameTimeout = std::chrono::milliseconds(500);
+
+
+	teamBlue.animations["walk"].frames.push_back(Game::Entities::Player::Blue::playerStand1);
+	teamBlue.animations["walk"].frames.push_back(Game::Entities::Player::Blue::playerWalk);
+	teamBlue.animations["walk"].frameTimeout = std::chrono::milliseconds(200);
+
+	teamBlue.animations["climb"].frames.push_back(Game::Entities::Player::Blue::playerClimb);
+	teamBlue.animations["climb"].frames.push_back(Game::Entities::Player::Blue::playerClimb2);
+	teamBlue.animations["climb"].frameTimeout = std::chrono::milliseconds(200);
+
+	//red
+	teamRed.animations["stay"].frames.push_back(Game::Entities::Player::Red::playerStand1);
+	teamRed.animations["stay"].frames.push_back(Game::Entities::Player::Red::playerStand2);
+	teamRed.animations["stay"].frameTimeout = std::chrono::milliseconds(500);
+
+	teamRed.animations["jump"].frames.push_back(Game::Entities::Player::Red::playerJump);
+	teamRed.animations["jump"].frameTimeout = std::chrono::milliseconds(500);
+
+
+	teamRed.animations["walk"].frames.push_back(Game::Entities::Player::Red::playerStand1);
+	teamRed.animations["walk"].frames.push_back(Game::Entities::Player::Red::playerWalk);
+	teamRed.animations["walk"].frameTimeout = std::chrono::milliseconds(200);
+
+	teamRed.animations["climb"].frames.push_back(Game::Entities::Player::Red::playerClimb);
+	teamRed.animations["climb"].frames.push_back(Game::Entities::Player::Red::playerClimb2);
+	teamRed.animations["climb"].frameTimeout = std::chrono::milliseconds(200);
+
+
+	you.setAnimManager(teamBlue);
+
 }
 
 Widget::~Widget()
@@ -39,7 +78,7 @@ void Widget::update()
 
 	if (keys[Qt::Key_D])
 	{
-        you.move(60);
+		you.vx += 60;
 	}
     if (keys[Qt::Key_O])
     {
@@ -50,12 +89,12 @@ void Widget::update()
         testLivesHud.value--;
     }
     if (keys[Qt::Key_A])
-	{
-        you.move(-60);
+    {
+		you.vx += -60;
 	}
 	if (keys[Qt::Key_W] && !keys[Qt::Key_Space])
 	{
-        you.setClimbVel(-60);
+	   you.setClimbVel(-60);
 	}
 	if (keys[Qt::Key_S] && !keys[Qt::Key_Space])
 	{
@@ -66,8 +105,27 @@ void Widget::update()
 		you._jump();
 	}
 
-    this->testLivesHud.value = you.getHealth();
-	cam.setPosition((-you.getPosition().x())+(this->width()/(Game::scaleFactor*2)), (-you.getPosition().y())+(this->height()/(Game::scaleFactor*2)));
+	if (you.y > testmap.getHeight()*16)
+	{
+		you.x = 0;
+		you.y = 0;
+	}
+	this->testLivesHud.value = you.health;
+	cam.setPosition((-you.x)+(this->width()/(Game::scaleFactor*2)), (-you.y)+(this->height()/(Game::scaleFactor*2)));
+	if (cam.getPosition().x() < -testmap.getWidth()*16+this->width()/Game::scaleFactor)
+	{
+		cam.setPosition(-testmap.getWidth()*16+this->width()/Game::scaleFactor, cam.getPosition().y());
+	}
+	if (cam.getPosition().x() > 0)
+	{
+		cam.setPosition(0, cam.getPosition().y());
+	}
+	if (cam.getPosition().y() < -testmap.getHeight()*16+this->height()/Game::scaleFactor)
+	{
+		cam.setPosition(cam.getPosition().x(), -testmap.getHeight()*16+this->height()/Game::scaleFactor);
+	}
+
+
 	you.update(deltaTime, testmap);
 
 	this->repaint();
@@ -75,7 +133,7 @@ void Widget::update()
 
 void Widget::mousePressEvent(QMouseEvent *e)
 {
-	you.useCurrentWeapon();
+	//you.useCurrentWeapon();
 }
 
 
@@ -95,7 +153,6 @@ void Widget::paintEvent(QPaintEvent *e)
     you.draw(painter, cam);
 
     testLivesHud.draw(painter, cam);
-
 }
 
 void Widget::keyPressEvent(QKeyEvent *e)

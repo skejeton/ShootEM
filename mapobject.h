@@ -16,6 +16,7 @@ public:
 	void setRect(QRect rect);
     void draw(QPainter &painter, Camera offset = Camera());
 	QRect getRect();
+    QRectF getMergedRect();
 	void applyProps(MapProps props);
 	void setType(BlockTypes type);
 	BlockTypes getType();

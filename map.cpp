@@ -22,8 +22,7 @@ void Map::draw(QPainter &p, Camera offset)
         for (int j = 0; j < this->height; j++)
         {
 			if (map[i][j].getType() == BlockTypes::null ||
-					map[i][j].getPosition().x()+offset.getPosition().x() < -map[i][j].getRect().width()
-					)
+					map[i][j].getPosition().x()+offset.getPosition().x() < -map[i][j].getRect().width())
             {
                 //qDebug()<< "null at" << i << " "<< j;
                 continue;
@@ -77,7 +76,7 @@ void Map::open(QString file)
 				this->map[j][i].setPosition(QPointF(j*16, i*16));
 				if (map[j][i].getType() == ladder)
 				{
-					if (map[j][i-1].getType() != ladder)
+					if (map[j][i-1].getType() != ladder && map[j][i-1].getType() != laddertop)
 					{
 						map[j][i].setType(laddertop);
 					}
