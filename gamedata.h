@@ -41,6 +41,7 @@ namespace Game {
         namespace Spikes {
             const QRect spikeRed(416, 0, 16, 16);
         }
+		const QRect Ice(64, 16, 16, 16);
 		namespace Grass {
 			const QRect grassNC(32, 0, 16, 16);
             const QRect grassAC(112, 16, 16, 16);
@@ -89,6 +90,9 @@ namespace Game {
 				const QRect playerClimb(0, 64, 16, 16);
 				const QRect playerClimb2(0, 64+16, 16, 16);
 				const QRect playerHit(16, 64, 16, 16);
+
+				const QRect playerDash(32, 80, 16, 16);
+				const QRect playerDash2(32+16, 80, 16, 16);
 			}
 			namespace Red {
 				const QRect playerStand1(0, 32+64, 16, 16);
@@ -99,6 +103,21 @@ namespace Game {
 				const QRect playerClimb(0, 64+64, 16, 16);
 				const QRect playerClimb2(0, 64+16+64, 16, 16);
 				const QRect playerHit(16, 64+64, 16, 16);
+
+				const QRect playerDash(32, 80+64, 16, 16);
+				const QRect playerDash2(32+16, 80+64, 16, 16);
+			}
+			namespace Gold {
+				const QRect playerStand1(0, 32+128, 16, 16);
+				const QRect playerStand2(0, 32+16+128, 16, 16);
+				const QRect playerWalk(16, 32+128, 16, 16);
+				const QRect playerAttack(16, 80+128, 16, 16);
+				const QRect playerJump(16, 48+128, 16, 16);
+				const QRect playerClimb(0, 64+128, 16, 16);
+				const QRect playerClimb2(0, 64+16+128, 16, 16);
+				const QRect playerHit(16, 64+128, 16, 16);
+				const QRect playerDash(32, 80+128, 16, 16);
+				const QRect playerDash2(32+16, 80+128, 16, 16);
 			}
 		}
 	}
@@ -119,7 +138,8 @@ namespace Game {
         MapProps(Game::Tiles::Grass::Corners::grassT, QPointF(0, 0), BlockTypes::solid),
         MapProps(Game::Tiles::Ladders::ladderBlue, QPointF(0, 0), BlockTypes::ladder),
 		MapProps(Game::Tiles::Spikes::spikeRed, QPointF(0, 0), BlockTypes::spike),
-		MapProps(Game::Tiles::Grass::grassNC, QPointF(0, 0), BlockTypes::solid)
+		MapProps(Game::Tiles::Grass::grassNC, QPointF(0, 0), BlockTypes::solid),
+		MapProps(Game::Tiles::Ice, QPointF(0, 0), BlockTypes::solid),
 	}
 
 	//extern QVector<MapObject> ids

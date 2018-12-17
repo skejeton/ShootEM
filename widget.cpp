@@ -45,6 +45,11 @@ Widget::Widget(QWidget *parent) :
 	teamBlue.animations["climb"].frames.push_back(Game::Entities::Player::Blue::playerClimb2);
 	teamBlue.animations["climb"].frameTimeout = std::chrono::milliseconds(200);
 
+	teamBlue.animations["dash"].frames.push_back(Game::Entities::Player::Blue::playerDash);
+	teamBlue.animations["dash"].frames.push_back(Game::Entities::Player::Blue::playerDash2);
+	teamBlue.animations["dash"].frameTimeout = std::chrono::milliseconds(100);
+
+
 	//red
 	teamRed.animations["stay"].frames.push_back(Game::Entities::Player::Red::playerStand1);
 	teamRed.animations["stay"].frames.push_back(Game::Entities::Player::Red::playerStand2);
@@ -62,9 +67,35 @@ Widget::Widget(QWidget *parent) :
 	teamRed.animations["climb"].frames.push_back(Game::Entities::Player::Red::playerClimb2);
 	teamRed.animations["climb"].frameTimeout = std::chrono::milliseconds(200);
 
+	teamRed.animations["dash"].frames.push_back(Game::Entities::Player::Red::playerDash);
+	teamRed.animations["dash"].frames.push_back(Game::Entities::Player::Red::playerDash2);
+	teamRed.animations["dash"].frameTimeout = std::chrono::milliseconds(100);
 
-	you.setAnimManager(teamBlue);
 
+	//gold
+	goldMember.animations["stay"].frames.push_back(Game::Entities::Player::Gold::playerStand1);
+	goldMember.animations["stay"].frames.push_back(Game::Entities::Player::Gold::playerStand2);
+	goldMember.animations["stay"].frameTimeout = std::chrono::milliseconds(500);
+
+	goldMember.animations["jump"].frames.push_back(Game::Entities::Player::Gold::playerJump);
+	goldMember.animations["jump"].frameTimeout = std::chrono::milliseconds(500);
+
+
+	goldMember.animations["walk"].frames.push_back(Game::Entities::Player::Gold::playerStand1);
+	goldMember.animations["walk"].frames.push_back(Game::Entities::Player::Gold::playerWalk);
+	goldMember.animations["walk"].frameTimeout = std::chrono::milliseconds(200);
+
+	goldMember.animations["climb"].frames.push_back(Game::Entities::Player::Gold::playerClimb);
+	goldMember.animations["climb"].frames.push_back(Game::Entities::Player::Gold::playerClimb2);
+	goldMember.animations["climb"].frameTimeout = std::chrono::milliseconds(200);
+
+	goldMember.animations["dash"].frames.push_back(Game::Entities::Player::Gold::playerDash);
+	goldMember.animations["dash"].frames.push_back(Game::Entities::Player::Gold::playerDash2);
+	goldMember.animations["dash"].frameTimeout = std::chrono::milliseconds(100);
+
+
+	you.setAnimManager(goldMember);
+	dashRReleased = false;
 }
 
 Widget::~Widget()
@@ -79,6 +110,25 @@ void Widget::update()
 	if (keys[Qt::Key_D])
 	{
 		you.vx += 60;
+
+		if (!dashIntervalR.isTimeout() && dashRReleased)
+		{
+			you._dash(120);
+			dashRReleased = false;
+		}
+		else
+		{
+			dashRReleased = false;
+			dashIntervalR.start(std::chrono::milliseconds(150));
+		}
+	}
+	else
+	{
+		if (!dashIntervalR.isTimeout())
+		{
+			dashRReleased = true;
+		}
+
 	}
     if (keys[Qt::Key_O])
     {
@@ -91,6 +141,23 @@ void Widget::update()
     if (keys[Qt::Key_A])
     {
 		you.vx += -60;
+		if (!dashIntervalL.isTimeout() && dashLReleased)
+		{
+			you._dash(-120);
+			dashLReleased = false;
+		}
+		else
+		{
+			dashLReleased = false;
+			dashIntervalL.start(std::chrono::milliseconds(150));
+		}
+	}
+	else
+	{
+		if (!dashIntervalL.isTimeout())
+		{
+			dashLReleased = true;
+		}
 	}
 	if (keys[Qt::Key_W] && !keys[Qt::Key_Space])
 	{
@@ -105,10 +172,11 @@ void Widget::update()
 		you._jump();
 	}
 
-	if (you.y > testmap.getHeight()*16)
+	if (you.y > testmap.getHeight()*16 || you.health < 0)
 	{
+		you.health = you.maxHealth;
 		you.x = 0;
-		you.y = 0;
+		you.y = -16;
 	}
 	this->testLivesHud.value = you.health;
 	cam.setPosition((-you.x)+(this->width()/(Game::scaleFactor*2)), (-you.y)+(this->height()/(Game::scaleFactor*2)));
@@ -141,7 +209,7 @@ void Widget::paintEvent(QPaintEvent *e)
 {
 	QPainter painter(this);
 	//background color
-	painter.setBrush(QBrush(QColor(136, 255, 234)));
+	painter.setBrush(QBrush(QColor(0, 64, 88)));
 	//no outline
 	painter.setPen(QColor(0,0,0,0));
 	//draw bg

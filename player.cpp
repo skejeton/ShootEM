@@ -22,18 +22,22 @@ Player::Player()
     health = 100;
     maxHealth = 100;
 
+	dashing = false;
 
     collisionCases[solid] = [&](MapObject &cObj, CDIR cDir)
     {
+
         if (vx > 0 && cDir == CDIR::X)
         {
             this->x = cObj.getPosition().x() - this->collisionRect.width();
-            vx = 0;
+			vx = 0;
+			interruptDash();
         }
         else if (vx < 0 && cDir == CDIR::X)
         {
             this->x = cObj.getPosition().x() + cObj.getRect().width();
             vx = 0;
+			interruptDash();
         }
         if (vy > 0 && cDir == CDIR::Y)
         {
@@ -76,8 +80,9 @@ Player::Player()
 		}
     };
     collisionCases[spike] = [&](MapObject &cObj, CDIR cDir)
-    {
-		health--;
+	{
+
+		getHit(1);
 		if (vx > 0 && cDir == CDIR::X)
 		{
 			this->x = cObj.getPosition().x() - this->collisionRect.width();
@@ -103,6 +108,11 @@ Player::Player()
 
 }
 
+void Player::getHit(int amount)
+{
+	health -= amount;
+}
+
 void Player::setAnimManager(AnimationManager<QRect> &m)
 {
 	this->animMan = m;
@@ -118,6 +128,12 @@ void Player::setClimbVel(int y)
 	if (y != 0)
 		climbing = true;
 	climbVelY = y;
+}
+
+void Player::interruptDash()
+{
+
+	dashTimeout.interrupt();
 }
 
 void Player::setRect(QRect rect)
@@ -138,12 +154,22 @@ void Player::draw(QPainter &painter, Camera offset)
 QRectF Player::getMergedRect()
 {
     return QRectF(x, y,
-                 collisionRect.width(), collisionRect.height());
+				  collisionRect.width(), collisionRect.height());
+}
+
+void Player::_dash(int dashVel)
+{
+	if (STATE != climb && dashTimeout.isTimeout())
+	{
+		dashTimeout.start(std::chrono::milliseconds(500));
+		this->dashVel = dashVel;
+	}
 }
 
 void Player::_jump()
 {
 	climbing = false;
+	interruptDash();
 	if (STATE == stay || STATE == walk)
 	{
 		vy = -160;
@@ -186,7 +212,18 @@ void Player::update(float deltaTime, Map &map)
 	oldY = y;
 	//Defines either player overlaps ladder or not
 	onLadder = false;
-    x += vx*deltaTime;
+
+	invicible = false;
+	if (!dashTimeout.isTimeout())
+	{
+		dashing = true;
+		vx = dashVel;
+	}
+	else
+	{
+		dashing = false;
+	}
+	x += vx*deltaTime;
 
 
     collision(map, CDIR::X);
@@ -198,6 +235,7 @@ void Player::update(float deltaTime, Map &map)
 		vy += Game::gravity;
 	}
 
+
 	if (onLadder && climbing)
 	{
 		vy = 0;
@@ -208,16 +246,28 @@ void Player::update(float deltaTime, Map &map)
 	{
 		climbing = false;
 	}
-
+	if (dashing)
+	{
+		vy = 0;
+	}
 	y += vy*deltaTime;
     collision(map, CDIR::Y);
-
 	if (vx != 0 && STATE == stay)
 	{
 		STATE = walk;
 	}
 
-	if (STATE == stay)
+	if (dashing)
+	{
+		STATE = dash;
+	}
+
+	if (STATE == dash)
+	{
+		animMan.setCurrentAnimation("dash");
+		animMan.update();
+	}
+	else if (STATE == stay)
 	{
 		animMan.setCurrentAnimation("stay");
 		animMan.update();
@@ -237,6 +287,9 @@ void Player::update(float deltaTime, Map &map)
 		animMan.setCurrentAnimation("walk");
 		animMan.update();
 	}
+
+
+
 
 
 

@@ -2,7 +2,12 @@
 
 void CoolDown::setTimeout(std::chrono::milliseconds timeout)
 {
-    this->timeout = timeout;
+	this->timeout = timeout;
+}
+
+void CoolDown::interrupt()
+{
+	started = false;
 }
 
 void CoolDown::start()

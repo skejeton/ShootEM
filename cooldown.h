@@ -12,6 +12,7 @@ class CoolDown
 	std::chrono::milliseconds stopmem;
 public:
     void setTimeout(std::chrono::milliseconds timeout);
+	void interrupt();
 	void start();
     void start(std::chrono::milliseconds timeout);
     bool isTimeout();

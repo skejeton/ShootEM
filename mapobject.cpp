@@ -20,7 +20,8 @@ void MapObject::setRect(QRect rect)
 
 void MapObject::draw(QPainter &painter, Camera offset)
 {
-    painter.drawPixmap((x+offset.getPosition().x())*Game::scaleFactor, (y+offset.getPosition().y())*Game::scaleFactor, tileset);
+
+	painter.drawPixmap((x+offset.getPosition().x())*Game::scaleFactor, (y+offset.getPosition().y())*Game::scaleFactor, tileset);
 }
 
 QRect MapObject::getRect()

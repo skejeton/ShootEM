@@ -42,11 +42,17 @@ private:
 	Background testBg;
 	Background bricksBg;
     Map testmap;
+	bool dashRReleased;
+	bool dashLReleased;
 
+
+	CoolDown dashIntervalR;
+	CoolDown dashIntervalL;
 
 	//Animation Managers
 	AnimationManager<QRect> teamRed;
 	AnimationManager<QRect> teamBlue;
+	AnimationManager<QRect> goldMember;
 private slots:
 	void update();
 protected:
