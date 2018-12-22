@@ -6,7 +6,7 @@ Widget::Widget(QWidget *parent) :
 	ui(new Ui::Widget)
 {
 	ui->setupUi(this);
-    testmap.open(":/files/assets/map.txt");
+	testmap.open(":/files/assets/mapnew.txt");
 
     you.setRect(QRect(-3, 0, 10, 15));
 
@@ -93,6 +93,8 @@ Widget::Widget(QWidget *parent) :
 	goldMember.animations["dash"].frames.push_back(Game::Entities::Player::Gold::playerDash2);
 	goldMember.animations["dash"].frameTimeout = std::chrono::milliseconds(100);
 
+	goldMember.animations["hit"].frames.push_back(Game::Entities::Player::Gold::playerHit);
+	goldMember.animations["hit"].frameTimeout = std::chrono::milliseconds(10000);
 
 	you.setAnimManager(goldMember);
 	dashRReleased = false;
@@ -172,12 +174,6 @@ void Widget::update()
 		you._jump();
 	}
 
-	if (you.y > testmap.getHeight()*16 || you.health < 0)
-	{
-		you.health = you.maxHealth;
-		you.x = 0;
-		you.y = -16;
-	}
 	this->testLivesHud.value = you.health;
 	cam.setPosition((-you.x)+(this->width()/(Game::scaleFactor*2)), (-you.y)+(this->height()/(Game::scaleFactor*2)));
 	if (cam.getPosition().x() < -testmap.getWidth()*16+this->width()/Game::scaleFactor)

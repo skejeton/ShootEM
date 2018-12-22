@@ -5,6 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
+QT       += multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -39,7 +40,8 @@ SOURCES += \
     cooldown.cpp \
     animation.tpp \
     entity.cpp \
-    animationmanager.tpp
+    animationmanager.tpp \
+    particle.cpp
 
 HEADERS += \
         widget.h \
@@ -57,7 +59,8 @@ HEADERS += \
     cooldown.h \
     animation.h \
     entity.h \
-    animationmanager.h
+    animationmanager.h \
+    particle.h
 
 FORMS += \
         widget.ui

@@ -5,6 +5,7 @@
 #include <QRect>
 #include <QMap>
 #include <iostream>
+#include <QSound>
 #include <functional>
 #include <QVector>
 #include "allweapons.h"
@@ -22,15 +23,16 @@ class Player : public Entity
 private:
 
     CoolDown hitCooldown;
-    CoolDown invicibleCooldown;
+	CoolDown invincibleCooldown;
 
     Weapon *currentWeapon;
-    QMap<BlockTypes, std::function<void(MapObject&, CDIR)>> collisionCases;
+	QMap<BlockTypes, std::function<bool(MapObject&, CDIR)>> collisionCases;
+	QVector<BlockTypes> collisionPriority;
 	Animation<bool> invAnim;
 	AnimationManager<QRect> animMan;
 	CoolDown attackAnimCooldown;
 	CoolDown dashTimeout;
-    bool invicible;
+	bool invincible;
 	int dirx;
 	bool isAttacking;
     bool onLadder;
@@ -39,8 +41,8 @@ private:
 public:
 	int climbVelY;
 	int dashVel;
-	int oldX;
-	int oldY;
+	float oldX;
+	float oldY;
 
 
     Player();
@@ -51,6 +53,7 @@ public:
 	void interruptDash();
     void setRect(QRect rect) override;
     void draw(QPainter& painter, Camera offset = Camera()) override;
+	void respawn();
     QRectF getMergedRect();
 
 	void _dash(int dashVel);

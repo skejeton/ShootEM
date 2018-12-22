@@ -3,5 +3,7 @@
         <file>assets/images/MTileset.png</file>
         <file>assets/map.txt</file>
         <file>assets/sounds/hit.wav</file>
+        <file>assets/mapnew.txt</file>
+        <file>assets/sounds/death.wav</file>
     </qresource>
 </RCC>

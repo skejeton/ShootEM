@@ -9,7 +9,7 @@ Player::Player()
 	dirx = 1;
 
     //Defines either player can be attacked or not
-    invicible = false;
+	invincible = false;
 
     //Defines either player attacking or not, used for animation
     isAttacking = false;
@@ -23,6 +23,17 @@ Player::Player()
     maxHealth = 100;
 
 	dashing = false;
+
+	//Invicibility animation
+	invAnim.frameTimeout = std::chrono::milliseconds(200);
+	invAnim.frames.push_back(false);
+	invAnim.frames.push_back(true);
+	invAnim.start();
+
+	collisionPriority.push_back(solid);
+	collisionPriority.push_back(spike);
+	collisionPriority.push_back(laddertop);
+	collisionPriority.push_back(ladder);
 
     collisionCases[solid] = [&](MapObject &cObj, CDIR cDir)
     {
@@ -39,7 +50,7 @@ Player::Player()
             vx = 0;
 			interruptDash();
         }
-        if (vy > 0 && cDir == CDIR::Y)
+		if (vy >= 0 && cDir == CDIR::Y)
         {
             this->y = cObj.getPosition().y() - this->collisionRect.height();
             vy = 0;
@@ -50,10 +61,11 @@ Player::Player()
             this->y = cObj.getPosition().y() + cObj.getRect().height();
             vy = 0;
         }
+		return true;
     };
     collisionCases[null] = [&](MapObject &cObj, CDIR cDir)
     {
-
+		return false;
     };
     collisionCases[ladder] = [&](MapObject &cObj, CDIR cDir)
 	{
@@ -63,9 +75,11 @@ Player::Player()
 			STATE = climb;
 			x = cObj.getPosition().x() + (cObj.getRect().width()-collisionRect.width())/2;
 		}
+
+		return false;
     };
     collisionCases[laddertop] = [&](MapObject &cObj, CDIR cDir)
-    {
+	{
 		onLadder = true;
 		if (cDir == CDIR::Y && activated(cObj) && climbVelY <= 0)
 		{
@@ -78,11 +92,14 @@ Player::Player()
 			STATE = climb;
 			x = cObj.getPosition().x() + (cObj.getRect().width()-collisionRect.width())/2;
 		}
+		return false;
     };
     collisionCases[spike] = [&](MapObject &cObj, CDIR cDir)
 	{
-
-		getHit(1);
+		if (cDir == Y)
+		{
+			getHit(20);
+		}
 		if (vx > 0 && cDir == CDIR::X)
 		{
 			this->x = cObj.getPosition().x() - this->collisionRect.width();
@@ -104,13 +121,26 @@ Player::Player()
 			this->y = cObj.getPosition().y() + cObj.getRect().height();
 			vy = 0;
 		}
+		return true;
     };
 
 }
 
 void Player::getHit(int amount)
 {
+	if (invincible) return;
+
+	QSound::play(":/files/assets/sounds/hit.wav");
 	health -= amount;
+	if (health <= 0)
+	{
+		respawn();
+	}
+	else
+	{
+		hitCooldown.start(std::chrono::milliseconds(2000));
+		invincibleCooldown.start(std::chrono::milliseconds(3000));
+	}
 }
 
 void Player::setAnimManager(AnimationManager<QRect> &m)
@@ -145,10 +175,18 @@ void Player::draw(QPainter &painter, Camera offset)
 {
     QPixmap toDraw;
 
+
 	toDraw = sprite.copy(animMan.getCurrentFrame());
 
-	painter.drawPixmap((collisionRect.x()+x+offset.getPosition().x())*Game::scaleFactor, (collisionRect.y()+y+offset.getPosition().y())*Game::scaleFactor,
+	if (visible == true)
+		painter.drawPixmap((collisionRect.x()+x+offset.getPosition().x())*Game::scaleFactor, (collisionRect.y()+y+offset.getPosition().y())*Game::scaleFactor,
 					   toDraw.transformed(QTransform().scale(Game::scaleFactor*dirx, Game::scaleFactor)));
+}
+
+void Player::respawn()
+{
+	QSound::play(":/files/assets/sounds/death.wav");
+	//x = y = 0;
 }
 
 QRectF Player::getMergedRect()
@@ -178,25 +216,28 @@ void Player::_jump()
 
 void Player::collision(Map &gameMap, CDIR cDir)
 {
-    for (int i = 0; i < gameMap.getWidth(); i++)
-    {
-        for (int j = 0; j < gameMap.getHeight(); j++)
-        {
-			STATE = jump;
-            MapObject thisObject = gameMap.getObject(i, j);
-
-			if (thisObject.getType() == null)
+	STATE = jump;
+	for (int k = 0; k < collisionPriority.size(); k++)
+	{
+		for (int i = 0; i < gameMap.getWidth(); i++)
+		{
+			for (int j = 0; j < gameMap.getHeight(); j++)
 			{
-				continue;
+				MapObject thisObject = gameMap.getObject(i, j);
+
+				if (thisObject.getType() != collisionPriority[k])
+				{
+					continue;
+				}
+
+				if (thisObject.getMergedRect().intersects(getMergedRect()))
+				{
+					collisionCases[thisObject.getType()](thisObject, cDir);
+				}
 			}
-
-            if (thisObject.getMergedRect().intersects(getMergedRect()))
-			{
-				 collisionCases[thisObject.getType()](thisObject, cDir);
-				 return;
-            }
 		}
-    }
+	}
+
 }
 
 bool Player::activated(MapObject &obj)
@@ -213,7 +254,6 @@ void Player::update(float deltaTime, Map &map)
 	//Defines either player overlaps ladder or not
 	onLadder = false;
 
-	invicible = false;
 	if (!dashTimeout.isTimeout())
 	{
 		dashing = true;
@@ -223,9 +263,10 @@ void Player::update(float deltaTime, Map &map)
 	{
 		dashing = false;
 	}
-	x += vx*deltaTime;
-
-
+	if (STATE != hit)
+	{
+		x += vx*deltaTime;
+	}
     collision(map, CDIR::X);
 
 
@@ -252,6 +293,12 @@ void Player::update(float deltaTime, Map &map)
 	}
 	y += vy*deltaTime;
     collision(map, CDIR::Y);
+
+
+	if (!hitCooldown.isTimeout())
+	{
+		STATE = hit;
+	}
 	if (vx != 0 && STATE == stay)
 	{
 		STATE = walk;
@@ -287,8 +334,23 @@ void Player::update(float deltaTime, Map &map)
 		animMan.setCurrentAnimation("walk");
 		animMan.update();
 	}
+	else if (STATE == hit)
+	{
+		animMan.setCurrentAnimation("hit");
+		animMan.update();
+	}
 
-
+	if (!invincibleCooldown.isTimeout())
+	{
+		invincible = true;
+		visible = invAnim.getCurrentFrame();
+		invAnim.requestFrame();
+	}
+	else
+	{
+		invincible = false;
+		visible = true;
+	}
 
 
 
