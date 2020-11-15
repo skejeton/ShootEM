@@ -12,8 +12,10 @@
 #include <QJsonObject>
 #include <QPaintEvent>
 #include "gamedata.h"
+#include "faketext.h"
 #include "player.h"
 #include "map.h"
+#include "dialog.h"
 #include "liveshud.h"
 #include "mapobject.h"
 #include "background.h"
@@ -41,6 +43,7 @@ private:
 	LeafShieldWeapon testWeapon;
 	Background testBg;
 	Background bricksBg;
+	Dialog testDialog;
     Map testmap;
 	bool dashRReleased;
 	bool dashLReleased;

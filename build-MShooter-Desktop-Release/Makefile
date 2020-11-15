@@ -14,7 +14,7 @@ CC            = gcc
 CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_NO_DEBUG -DQT_MULTIMEDIA_LIB -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_NETWORK_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-CXXFLAGS      = -pipe -O2 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
+CXXFLAGS      = -pipe -O2 -std=gnu++1y -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 INCPATH       = -I../../MShooter666 -I. -isystem /usr/include/x86_64-linux-gnu/qt5 -isystem /usr/include/x86_64-linux-gnu/qt5/QtMultimedia -isystem /usr/include/x86_64-linux-gnu/qt5/QtWidgets -isystem /usr/include/x86_64-linux-gnu/qt5/QtGui -isystem /usr/include/x86_64-linux-gnu/qt5/QtNetwork -isystem /usr/include/x86_64-linux-gnu/qt5/QtCore -I. -isystem /usr/include/libdrm -I. -I/usr/lib/x86_64-linux-gnu/qt5/mkspecs/linux-g++
 QMAKE         = /usr/lib/qt5/bin/qmake
 DEL_FILE      = rm -f
@@ -64,7 +64,9 @@ SOURCES       = ../main.cpp \
 		../liveshud.cpp \
 		../cooldown.cpp \
 		../entity.cpp \
-		../particle.cpp qrc_resources.cpp \
+		../particle.cpp \
+		../faketext.cpp \
+		../dialog.cpp qrc_resources.cpp \
 		moc_widget.cpp
 OBJECTS       = main.o \
 		widget.o \
@@ -81,6 +83,8 @@ OBJECTS       = main.o \
 		cooldown.o \
 		entity.o \
 		particle.o \
+		faketext.o \
+		dialog.o \
 		qrc_resources.o \
 		moc_widget.o
 DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
@@ -180,7 +184,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../animation.h \
 		../entity.h \
 		../animationmanager.h \
-		../particle.h ../main.cpp \
+		../particle.h \
+		../faketext.h \
+		../dialog.h ../main.cpp \
 		../widget.cpp \
 		../player.cpp \
 		../gamedata.cpp \
@@ -194,7 +200,9 @@ DIST          = /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/spec_pre.prf \
 		../liveshud.cpp \
 		../cooldown.cpp \
 		../entity.cpp \
-		../particle.cpp
+		../particle.cpp \
+		../faketext.cpp \
+		../dialog.cpp
 QMAKE_TARGET  = MShooter
 DESTDIR       = 
 TARGET        = MShooter
@@ -399,8 +407,8 @@ distdir: FORCE
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../resources.qrc $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../widget.h ../player.h ../gamedata.h ../map.h ../mapobject.h ../background.h ../camera.h ../weapon.h ../weaponpart.h ../leafshieldweapon.h ../allweapons.h ../liveshud.h ../cooldown.h ../animation.h ../entity.h ../animationmanager.h ../particle.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../main.cpp ../widget.cpp ../player.cpp ../gamedata.cpp ../map.cpp ../mapobject.cpp ../background.cpp ../camera.cpp ../weapon.cpp ../weaponpart.cpp ../leafshieldweapon.cpp ../liveshud.cpp ../cooldown.cpp ../entity.cpp ../particle.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../widget.h ../player.h ../gamedata.h ../map.h ../mapobject.h ../background.h ../camera.h ../weapon.h ../weaponpart.h ../leafshieldweapon.h ../allweapons.h ../liveshud.h ../cooldown.h ../animation.h ../entity.h ../animationmanager.h ../particle.h ../faketext.h ../dialog.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../main.cpp ../widget.cpp ../player.cpp ../gamedata.cpp ../map.cpp ../mapobject.cpp ../background.cpp ../camera.cpp ../weapon.cpp ../weaponpart.cpp ../leafshieldweapon.cpp ../liveshud.cpp ../cooldown.cpp ../entity.cpp ../particle.cpp ../faketext.cpp ../dialog.cpp $(DISTDIR)/
 	$(COPY_FILE) --parents ../widget.ui $(DISTDIR)/
 
 
@@ -434,30 +442,34 @@ qrc_resources.cpp: ../resources.qrc \
 		../assets/map.txt \
 		../assets/images/MTileset.png \
 		../assets/sounds/hit.wav \
-		../assets/sounds/death.wav
+		../assets/sounds/death.wav \
+		../assets/sounds/typing.wav
 	/usr/lib/qt5/bin/rcc -name resources ../resources.qrc -o qrc_resources.cpp
 
 compiler_moc_predefs_make_all: moc_predefs.h
 compiler_moc_predefs_clean:
 	-$(DEL_FILE) moc_predefs.h
 moc_predefs.h: /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
-	g++ -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
+	g++ -pipe -O2 -std=gnu++1y -Wall -W -dM -E -o moc_predefs.h /usr/lib/x86_64-linux-gnu/qt5/mkspecs/features/data/dummy.cpp
 
 compiler_moc_header_make_all: moc_widget.cpp
 compiler_moc_header_clean:
 	-$(DEL_FILE) moc_widget.cpp
 moc_widget.cpp: ../gamedata.h \
+		../faketext.h \
+		../camera.h \
 		../player.h \
 		../allweapons.h \
 		../leafshieldweapon.h \
 		../weapon.h \
-		../camera.h \
 		../weaponpart.h \
+		../particle.h \
 		../map.h \
+		../dialog.h \
+		../cooldown.h \
 		../mapobject.h \
 		../entity.h \
 		../animation.h \
-		../cooldown.h \
 		../animation.tpp \
 		../animationmanager.h \
 		../animationmanager.tpp \
@@ -489,17 +501,20 @@ compiler_clean: compiler_rcc_clean compiler_moc_predefs_clean compiler_moc_heade
 
 main.o: ../main.cpp ../widget.h \
 		../gamedata.h \
+		../faketext.h \
+		../camera.h \
 		../player.h \
 		../allweapons.h \
 		../leafshieldweapon.h \
 		../weapon.h \
-		../camera.h \
 		../weaponpart.h \
+		../particle.h \
 		../map.h \
+		../dialog.h \
+		../cooldown.h \
 		../mapobject.h \
 		../entity.h \
 		../animation.h \
-		../cooldown.h \
 		../animation.tpp \
 		../animationmanager.h \
 		../animationmanager.tpp \
@@ -509,17 +524,20 @@ main.o: ../main.cpp ../widget.h \
 
 widget.o: ../widget.cpp ../widget.h \
 		../gamedata.h \
+		../faketext.h \
+		../camera.h \
 		../player.h \
 		../allweapons.h \
 		../leafshieldweapon.h \
 		../weapon.h \
-		../camera.h \
 		../weaponpart.h \
+		../particle.h \
 		../map.h \
+		../dialog.h \
+		../cooldown.h \
 		../mapobject.h \
 		../entity.h \
 		../animation.h \
-		../cooldown.h \
 		../animation.tpp \
 		../animationmanager.h \
 		../animationmanager.tpp \
@@ -535,11 +553,14 @@ player.o: ../player.cpp ../player.h \
 		../camera.h \
 		../weaponpart.h \
 		../gamedata.h \
+		../particle.h \
 		../map.h \
+		../dialog.h \
+		../cooldown.h \
+		../faketext.h \
 		../mapobject.h \
 		../entity.h \
 		../animation.h \
-		../cooldown.h \
 		../animation.tpp \
 		../animationmanager.h \
 		../animationmanager.tpp
@@ -549,9 +570,12 @@ gamedata.o: ../gamedata.cpp ../gamedata.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gamedata.o ../gamedata.cpp
 
 map.o: ../map.cpp ../map.h \
-		../mapobject.h \
+		../dialog.h \
 		../camera.h \
-		../gamedata.h
+		../gamedata.h \
+		../cooldown.h \
+		../faketext.h \
+		../mapobject.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o map.o ../map.cpp
 
 mapobject.o: ../mapobject.cpp ../mapobject.h \
@@ -596,16 +620,31 @@ cooldown.o: ../cooldown.cpp ../cooldown.h
 entity.o: ../entity.cpp ../entity.h \
 		../gamedata.h \
 		../map.h \
-		../mapobject.h \
+		../dialog.h \
 		../camera.h \
-		../animation.h \
 		../cooldown.h \
+		../faketext.h \
+		../mapobject.h \
+		../animation.h \
 		../animation.tpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o entity.o ../entity.cpp
 
 particle.o: ../particle.cpp ../particle.h \
+		../gamedata.h \
 		../camera.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o particle.o ../particle.cpp
+
+faketext.o: ../faketext.cpp ../faketext.h \
+		../camera.h \
+		../gamedata.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o faketext.o ../faketext.cpp
+
+dialog.o: ../dialog.cpp ../dialog.h \
+		../camera.h \
+		../gamedata.h \
+		../cooldown.h \
+		../faketext.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o dialog.o ../dialog.cpp
 
 qrc_resources.o: qrc_resources.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o qrc_resources.o qrc_resources.cpp

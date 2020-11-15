@@ -2,6 +2,7 @@
 #define PARTICLE_H
 #include <QPainter>
 #include <QRect>
+#include "gamedata.h"
 #include "camera.h"
 
 class Particle
@@ -10,9 +11,14 @@ private:
 	QRect textureRect;
 	QPixmap texture;
 public:
-	virtual void draw(QPainter painter, Camera offset = Camera());
+	float x, y;
+	float vx, vy;
+	float ax, ay;
+
+	virtual void update(float deltaTime);
+	virtual void draw(QPainter &painter, Camera offset = Camera());
 	void setTextureRect(QRect tRect);
-	virtual ~Particle() = 0;
+	virtual ~Particle();
 	Particle();
 };
 

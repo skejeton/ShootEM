@@ -6,7 +6,7 @@ Widget::Widget(QWidget *parent) :
 	ui(new Ui::Widget)
 {
 	ui->setupUi(this);
-	testmap.open(":/files/assets/mapnew.txt");
+	testmap.open(":/files/assets/map.txt");
 
     you.setRect(QRect(-3, 0, 10, 15));
 
@@ -17,6 +17,7 @@ Widget::Widget(QWidget *parent) :
 	frameUpdate.setInterval(1000/Game::framerate);
 	frameUpdate.start();
 	frameInterval.start();
+
 	bricksBg.setRect(Game::Tiles::Backgrounds::bgBrick);
 	bricksBg.setPosition(0, 360);
 	bricksBg.setColorAfter(QColor(0,0,0,255));
@@ -96,7 +97,15 @@ Widget::Widget(QWidget *parent) :
 	goldMember.animations["hit"].frames.push_back(Game::Entities::Player::Gold::playerHit);
 	goldMember.animations["hit"].frameTimeout = std::chrono::milliseconds(10000);
 
-	you.setAnimManager(goldMember);
+
+	testDialog.addNode(NARRATOR_NORMAL,
+					   "WELCOME TO THE GAME!\nI WILL BE YOUR GUIDE\nTILL THE END.\nPRESS F TO CONTINUE");
+	testDialog.addNode(NARRATOR_NORMAL,
+					   "USE WASD TO MOVE,\nAND USE SPACEBAR TO JUMP\nPRE..");
+	testDialog.addNode(PLAYER_ANGRY,
+					   "SHUT MOUTH");
+	testDialog.start(std::chrono::milliseconds(100));
+	you.setAnimManager(teamBlue);
 	dashRReleased = false;
 }
 
@@ -173,7 +182,15 @@ void Widget::update()
 	{
 		you._jump();
 	}
-
+	if (keys[Qt::Key_F])
+	{
+		testDialog.speedUp();
+		testDialog.continueDialog();
+	}
+	if (!testDialog.isEnd)
+	{
+		testDialog.update();
+	}
 	this->testLivesHud.value = you.health;
 	cam.setPosition((-you.x)+(this->width()/(Game::scaleFactor*2)), (-you.y)+(this->height()/(Game::scaleFactor*2)));
 	if (cam.getPosition().x() < -testmap.getWidth()*16+this->width()/Game::scaleFactor)
@@ -189,7 +206,6 @@ void Widget::update()
 		cam.setPosition(cam.getPosition().x(), -testmap.getHeight()*16+this->height()/Game::scaleFactor);
 	}
 
-
 	you.update(deltaTime, testmap);
 
 	this->repaint();
@@ -197,7 +213,7 @@ void Widget::update()
 
 void Widget::mousePressEvent(QMouseEvent *e)
 {
-	//you.useCurrentWeapon();
+	you.useCurrentWeapon();
 }
 
 
@@ -215,8 +231,13 @@ void Widget::paintEvent(QPaintEvent *e)
 	//bricksBg.draw(painter, this->width(), cam);
     testmap.draw(painter, cam);
     you.draw(painter, cam);
-
-    testLivesHud.draw(painter, cam);
+	testDialog.initByHeight(this->height());
+	if (!testDialog.isEnd)
+	{
+		testDialog.draw(painter);
+	}
+	testLivesHud.draw(painter, cam);
+	you.currentWeapon->draw(painter, cam);
 }
 
 void Widget::keyPressEvent(QKeyEvent *e)

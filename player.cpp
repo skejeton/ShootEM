@@ -11,16 +11,38 @@ Player::Player()
     //Defines either player can be attacked or not
 	invincible = false;
 
+	isDead = false;
     //Defines either player attacking or not, used for animation
     isAttacking = false;
 
     //Defines either player on ladder or not
-    onLadder = false;
+	onLadder = false;
+	canMove = true;
+
+	currentWeapon = new LeafShieldWeapon();
 
     vx = vy = 0;
 
     health = 100;
     maxHealth = 100;
+
+	for (int i = 0; i < 8; i++)
+	{
+		float step = i/8;
+		float currentSine = std::sin(M_PI*step);
+		float currentCoSine = std::cos(M_PI*step);
+		Particle currentParticle;
+		currentParticle.setTextureRect(Game::deathParticle1);
+
+		currentParticle.x = x;
+		currentParticle.y = y;
+		currentParticle.x = currentCoSine*30;
+		currentParticle.y = currentSine*30;
+
+		deathParticles.push_back(currentParticle);
+	}
+
+
 
 	dashing = false;
 
@@ -98,7 +120,7 @@ Player::Player()
 	{
 		if (cDir == Y)
 		{
-			getHit(20);
+			getHit(maxHealth);
 		}
 		if (vx > 0 && cDir == CDIR::X)
 		{
@@ -128,7 +150,7 @@ Player::Player()
 
 void Player::getHit(int amount)
 {
-	if (invincible) return;
+	if (invincible || isDead) return;
 
 	QSound::play(":/files/assets/sounds/hit.wav");
 	health -= amount;
@@ -174,11 +196,16 @@ void Player::setRect(QRect rect)
 void Player::draw(QPainter &painter, Camera offset)
 {
     QPixmap toDraw;
-
-
+	if (isDead)
+	{
+		for (int i = 0; i < deathParticles.size(); i++)
+		{
+			deathParticles[i].draw(painter, offset);
+		}
+	}
 	toDraw = sprite.copy(animMan.getCurrentFrame());
 
-	if (visible == true)
+	if (visible == true && !isDead)
 		painter.drawPixmap((collisionRect.x()+x+offset.getPosition().x())*Game::scaleFactor, (collisionRect.y()+y+offset.getPosition().y())*Game::scaleFactor,
 					   toDraw.transformed(QTransform().scale(Game::scaleFactor*dirx, Game::scaleFactor)));
 }
@@ -186,7 +213,24 @@ void Player::draw(QPainter &painter, Camera offset)
 void Player::respawn()
 {
 	QSound::play(":/files/assets/sounds/death.wav");
-	//x = y = 0;
+	if (isDead) return;
+	for (int i = 0; i < deathParticles.size(); i++)
+	{
+		float step = i/(float)deathParticles.size();
+		float currentSine = std::sin(M_PI*step*2);
+		float currentCoSine = std::cos(M_PI*step*2);
+
+		deathParticles[i].x = x;
+		deathParticles[i].y = y;
+		deathParticles[i].vx = currentCoSine*50;
+		deathParticles[i].vy = currentSine*50;
+		deathParticles[i].x += currentCoSine*30;
+		deathParticles[i].y += currentSine*30;
+	}
+	respawnSchelude.start(std::chrono::milliseconds(10000));
+	isDead = true;
+	canMove = false;
+
 }
 
 QRectF Player::getMergedRect()
@@ -208,7 +252,7 @@ void Player::_jump()
 {
 	climbing = false;
 	interruptDash();
-	if (STATE == stay || STATE == walk)
+	if (STATE == stay || STATE == walk && canMove)
 	{
 		vy = -160;
 	}
@@ -247,6 +291,16 @@ bool Player::activated(MapObject &obj)
 
 void Player::update(float deltaTime, Map &map)
 {
+
+	this->currentWeapon->update(deltaTime);
+	if (isDead && respawnSchelude.isTimeout())
+	{
+		isDead = false;
+		canMove = true;
+		x = 0;
+		y = 0;
+		health = maxHealth;
+	}
 	if (vx != 0)
 		dirx = Game::getSign(vx);
 	oldX = x;
@@ -254,6 +308,10 @@ void Player::update(float deltaTime, Map &map)
 	//Defines either player overlaps ladder or not
 	onLadder = false;
 
+	if (y > (map.getHeight()*16))
+	{
+		getHit(10000);
+	}
 	if (!dashTimeout.isTimeout())
 	{
 		dashing = true;
@@ -263,13 +321,18 @@ void Player::update(float deltaTime, Map &map)
 	{
 		dashing = false;
 	}
-	if (STATE != hit)
+	if (STATE != hit && canMove)
 	{
 		x += vx*deltaTime;
 	}
     collision(map, CDIR::X);
 
+	if (this->currentWeapon->isUsing())
+	{
+		QRectF mtv = this->getMergedRect();
 
+		this->currentWeapon->moveToPlayer(QRect(mtv.x(), mtv.y(), mtv.width(), mtv.height()));
+	}
 
 	if (STATE == jump)
 	{
@@ -352,10 +415,16 @@ void Player::update(float deltaTime, Map &map)
 		visible = true;
 	}
 
-
-
-
 	climbVelY = 0;
+
+	if (isDead)
+	{
+		for (int i = 0; i < deathParticles.size(); i++)
+		{
+			deathParticles[i].update(deltaTime);
+		}
+	}
+
 
 
     vx = 0;

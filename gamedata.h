@@ -13,12 +13,22 @@ enum BlockTypes
     spike
 };
 
+enum DialogIcons
+{
+	NARRATOR_NORMAL,
+	PLAYER_NORMAL,
+	PLAYER_ANGRY,
+	DIOBRANDO,
+	FINALBOSS,
+};
+
 enum CDIR {X, Y};
 
 typedef std::tuple<QRect, QPointF, BlockTypes> MapProps;
 
 namespace Game {
-	template <typename T> int getSign(T val) {
+	template <typename T>
+	int getSign(T val) {
 		return (T(0) < val) - (val < T(0));
 	}
 	extern float gravity;
@@ -32,6 +42,21 @@ namespace Game {
 	const QRect Hud2(232, 8, 8, 8);
 	const QRect Hud3(232, 0, 8, 8);
 	const QRect Hud4(224, 0, 8, 8);
+
+	const QRect frameTopLeft(152, 112, 8, 8);
+	const QRect frameTop(160, 112, 8, 8);
+	const QRect frameTopRight(168, 112, 8, 8);
+	const QRect frameLeft(152, 120, 8, 8);
+	const QRect frameRight(168, 120, 8, 8);
+	const QRect frameBottomLeft(152, 128, 8, 8);
+	const QRect frameBottom(160, 128, 8, 8);
+	const QRect frameBottomRight(168, 128, 8, 8);
+
+	const QRect NarratorNormal(112, 56, 32, 32);
+	const QRect DioBrando(232, 56, 32, 32);
+
+	const QRect deathParticle1(0, 224, 16, 16);
+	const QRect deathParticle2(16, 224, 16, 16);
 
 	namespace Tiles {
 		const QRect air(0, 0, 16, 16);

@@ -7,7 +7,6 @@ Weapon::Weapon()
 
 void Weapon::use()
 {
-	this->_isUsing = true;
 }
 
 bool Weapon::isUsing()

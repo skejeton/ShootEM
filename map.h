@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <QTextStream>
 #include <QFile>
+#include "dialog.h"
 #include "mapobject.h"
 #include "camera.h"
 #include "gamedata.h"
@@ -25,6 +26,7 @@ public:
 private:
     int width;
     int height;
+	Dialog startDialog;
 	MapObject** map;
 };
 

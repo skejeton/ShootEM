@@ -10,6 +10,7 @@
 #include <QVector>
 #include "allweapons.h"
 #include "gamedata.h"
+#include "particle.h"
 #include "map.h"
 #include "entity.h"
 #include "animation.h"
@@ -25,22 +26,27 @@ private:
     CoolDown hitCooldown;
 	CoolDown invincibleCooldown;
 
-    Weapon *currentWeapon;
+	QVector<Particle> deathParticles;
+
 	QMap<BlockTypes, std::function<bool(MapObject&, CDIR)>> collisionCases;
 	QVector<BlockTypes> collisionPriority;
 	Animation<bool> invAnim;
 	AnimationManager<QRect> animMan;
 	CoolDown attackAnimCooldown;
 	CoolDown dashTimeout;
+	CoolDown respawnSchelude;
 	bool invincible;
 	int dirx;
+	bool isDead;
 	bool isAttacking;
     bool onLadder;
 	bool climbing;
 	bool dashing;
 public:
+	Weapon *currentWeapon;
 	int climbVelY;
 	int dashVel;
+	bool canMove;
 	float oldX;
 	float oldY;
 
